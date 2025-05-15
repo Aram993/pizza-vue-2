@@ -1,11 +1,11 @@
 <template>
     <div class="container">
-        <router-link to="/main">Главная</router-link>
-        <RouterLink to="/cart" :class="{'productsInCart': totalProducts > 0}" @click="isShownCart = false" v-if="isShownCart">
+        <router-link to="/main" @click="isShownCart = true">Главная</router-link>
+        <RouterLink to="/cart" :class="{'productsInCart': productsCart.totalPrice > 0}" @click="isShownCart = false" v-if="isShownCart">
             <span>Корзина</span>
-            <div :class="{'cartPrice': totalProducts > 0, 'emptyCart': totalProducts === 0}">
-                <span v-if="totalPrice > 0">{{ totalPrice }} ₽</span>
-                <span>{{ totalProducts }}</span>
+            <div :class="[totalAmount ? 'cartPrice' : 'emptyCart']">
+                <span v-if="totalAmount">{{ productsCart.totalPrice }} ₽</span>
+                <span>{{ totalAmount }}</span>
             </div>
         </RouterLink>
     </div>
@@ -18,11 +18,11 @@ export default {
     name: "Header",
     data() {
         return {
-            isShownCart: true
+            isShownCart: true,
         }
     },
     computed: {
-        ...mapState(useProductCart, ["totalProducts", "totalPrice"])
+        ...mapState(useProductCart, ["productsCart", "totalAmount"])
     }
 }
 </script>

@@ -1,46 +1,63 @@
 <template>
     <div class="container">
-        <div class="product" v-for="product in productsCart">
-            <img :src="product.image" :alt="product.name">
+        <div v-for="product in products" :key="product.id">
+            <div class="product" v-if="getProductsQuantity(product.id)">
+                <img :src="product.image" :alt="product.name">
             <div class="wrapper">
                 <div class="product-info">
                     <p>{{ product.name }}</p>
                     <div class="product-info-price">
                         <span>{{ product.price }} ₽</span>
                         <span class="splitter">.</span>
-                        <span>{{ getFullProductPrice(product) }} ₽</span>
+                        <span>{{ product.price * getProductsQuantity(product.id)}} ₽</span>
                     </div>
                 </div>
                 <div class="product-numbers">
-                    <div class="sign" @click="addToCart(product)">+</div>
-                    <div>{{ productInCart(product.id) }}</div>
-                    <div class="sign" @click="removeFromCart(product)">-</div>
+                    <div class="sign" @click="addProduct(product.id)">+</div>
+                    <div>{{getProductsQuantity(product.id)}}</div>
+                    <div class="sign" @click="removeProduct(product.id)">-</div>
                 </div>
             </div>
+            </div>
+            
         </div>
-        <div class="total">Итого: {{ totalPrice }} ₽</div>
+        <div class="total">Итого: {{ productsCart.totalPrice }} ₽</div>
     </div>
 </template>
 <script>
 import { useProductCart } from '@/stores/productCart';
 import { mapActions, mapState } from 'pinia';
 
+
 export default {
     name: "Cart",
+    data() {
+        return {
+            products: []
+        }
+    },
     computed: {
-        ...mapState(useProductCart, ["productsCart", "totalPrice"])
+        ...mapState(useProductCart, ["productsCart"])
     },
     methods: {
-        ...mapActions(useProductCart, ["productInCart", "addToCart", "removeFromCart"]),
-        getFullProductPrice(product) {
+        ...mapActions(useProductCart, ["addProduct", "removeProduct"]),
+        getProductsFromCart() {
+            this.productsCart.items?.forEach(item => {
+                this.products.push(item.product);
+            })
+        },
+        getProductsQuantity(id) {
             let result = 0
-            this.productsCart.forEach(item => {
-                if (item.id === product.id) {
-                    result = item.price * item.amount
+            this.productsCart.items?.forEach(item => {
+                if (item.product.id === id) {
+                    result = item.quantity
                 }
             })
-            return result
+            return result;
         }
+    },
+    mounted() {
+        this.getProductsFromCart();
     }
 }
 </script>

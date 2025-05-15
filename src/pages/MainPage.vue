@@ -1,41 +1,54 @@
 <template>
     <div class="field">
-        <div class="card" v-for="product in products">
+        <div class="card" v-for="product in products" :key="product.id">
             <img :src="product.image" :alt="product.name">
             <div>
                 <h2>{{ product.name }}</h2>
                 <p>{{ product.price }}₽</p>
-                <button @click="addToCart(product)" v-if="!productInCart(product.id)">Купить</button>
+                <button v-if="!checkProductInCart(product.id)" @click="addProduct(product.id)">Купить</button>
                 <div v-else>
-                    <div @click="addToCart(product)">+</div>
-                    <div>{{ productInCart(product.id) }}</div>
-                    <div @click="removeFromCart(product)">-</div>
+                    <button @click="addProduct(product.id)" :disabled="isLoading">+</button>
+                    <div>{{ checkProductInCart(product.id) }}</div>
+                    <button @click="removeProduct(product.id)">-</button>
                 </div>
             </div>
         </div>
     </div>
 </template>
 <script>
+import { productsService } from '@/services/productsService';
 import { useProductCart } from '@/stores/productCart';
-import $axios from '@/utils/axiosInstance';
 import { mapActions, mapState } from 'pinia';
-
+const {getProducts} = productsService();
 export default {
     name: "MainPage",
     data() {
         return {
-            products: []
+            products: [],
         }
     },
     methods: {
-        async getProducts() {
-            const response = await $axios.get("/pizzas");
-            this.products.push(...response.data);
+        async fetchProducts() {
+           this.products.push(...await getProducts());
         },
-        ...mapActions(useProductCart, ["addToCart", "productInCart", "removeFromCart"])
+
+        ...mapActions(useProductCart, ["addProduct", "removeProduct"]),
+
+        checkProductInCart(id) {
+            let result = 0;
+            this.productsCart.items.forEach(el => {
+              if (el.product.id === id) {
+                result = el.quantity;
+              }
+            })
+            return result;
+        }
+    },
+    computed: {
+        ...mapState(useProductCart, ["productsCart", "isLoading"])
     },
     created() {
-        this.getProducts();
+        this.fetchProducts();
     }
 }
 </script>
@@ -112,9 +125,11 @@ export default {
                     border-top-left-radius: 10px;
                     border-bottom-left-radius: 10px;
                     border-right: 2px solid white;
+                    background-color: orangered;
 
                     &:hover {
                         background-color: red;
+                        color: #fff;
                         cursor: pointer;
                     }
                 }
@@ -128,9 +143,11 @@ export default {
                     border-top-right-radius: 10px;
                     border-bottom-right-radius: 10px;
                     border-left: 2px solid white;
+                    background-color: orangered;
 
                     &:hover {
                         background-color: red;
+                        color: #fff;
                         cursor: pointer;
                     }
                 }

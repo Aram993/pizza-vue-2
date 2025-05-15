@@ -1,54 +1,41 @@
 import { defineStore } from "pinia";
+import { cartService } from "@/services/cartService";
+const {getCart} = cartService();
+const {addToCart} = cartService();
+const {removeFromCart} = cartService();
 
 export const useProductCart = defineStore("cart", {
     state: ()=> ({
-        productsCart: []
+        productsCart: {},
+        isLoading: false
     }),
     getters: {
-        totalProducts: (state) => {
-            return state.productsCart.reduce((acc, item) => {
-                return acc + item.amount
-            },0)
-        },
-        totalPrice: (state) => {
-            return state.productsCart.reduce((acc, item) => {
-                return acc + item.price * item.amount
-            }, 0)
+        totalAmount: (state) => {
+            return state.productsCart.items?.reduce((acc, el) => acc + el.quantity, 0)
         }
     },
     actions: {
-        addToCart(product) {
-            let isSame = false;
-
-            this.productsCart.forEach(item => {
-                if (item.id === product.id) {
-                    isSame = true;
-                    item.amount++
-                }
-            })
-
-            if (isSame === false) {
-                this.productsCart.push({...product, amount: 1})
+        async fetchCart() {
+            this.productsCart = await getCart();
+        },
+        async addProduct(id) {
+            try {
+                this.isLoading = true;
+                const updatedCart = await addToCart(id);
+                this.productsCart = updatedCart;
+            } finally {
+                this.isLoading = false;
             }
-
-            isSame = false;
         },
-        productInCart(id) {
-            let numOfProduct = 0;
-            this.productsCart.forEach(item => {
-                if (item.id === id) {
-                    numOfProduct = item.amount
-                }
-            })
-            return numOfProduct;
-        },
-        removeFromCart(product) {
-            this.productsCart.forEach(item => {
-                if (item.id === product.id) {
-                    item.amount--
-                }
-            })
+        async removeProduct(id) {
+            try {
+                this.isLoading = true;
+                const updatedCart = await removeFromCart(id);
+                this.productsCart = updatedCart;
+            } finally {
+                this.isLoading = false;
+            }
         }
     }
-        
+    
 })
